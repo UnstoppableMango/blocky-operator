@@ -20,6 +20,22 @@ class BlockyReconcilerIntegrationTest {
       LocallyRunOperatorExtension.builder().withReconciler(BlockyReconciler.class).build();
 
   @Test
+  void createsDeployment() {
+    extension.create(testResource());
+
+    await()
+        .untilAsserted(
+            () -> {
+              var deployment = extension.get(Deployment.class, RESOURCE_NAME);
+              assertThat(deployment).isNotNull();
+              assertThat(deployment.getSpec().getTemplate().getSpec().getContainers())
+                  .hasSize(1)
+                  .first()
+                  .satisfies(c -> assertThat(c.getImage()).isEqualTo(INITIAL_IMAGE));
+            });
+  }
+
+  @Test
   void testCRUDOperations() {
     var cr = extension.create(testResource());
 
