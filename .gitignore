@@ -45,3 +45,4 @@ nb-configuration.xml
 
 # kind cluster
 .kind/
+.claude/

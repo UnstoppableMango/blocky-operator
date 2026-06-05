@@ -35,8 +35,11 @@
           devShells.default = pkgs.mkShellNoCC {
             packages = with pkgs; [
               gnumake
+              kind
+              kubectl
               maven
               nixfmt
+              podman
             ];
           };
 

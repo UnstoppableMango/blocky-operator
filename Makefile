@@ -1,6 +1,8 @@
 KIND_CLUSTER_NAME ?= blocky-operator
 KIND_KUBECONFIG   := .kind/kubeconfig
 
+export KIND_EXPERIMENTAL_PROVIDER = podman
+
 .PHONY: build update check lint format fmt test start-kind stop-kind
 
 build:
