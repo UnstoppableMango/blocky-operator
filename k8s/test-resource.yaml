@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
-apiVersion: dev.unmango/v1
-kind: BlockyOperatorCustomResource
+apiVersion: dev.unmango/v1alpha1
+kind: Blocky
 metadata:
   name: test1
 spec:
-  value: test
+  image: ghcr.io/0xERR0R/blocky:latest

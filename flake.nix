@@ -25,11 +25,11 @@
       perSystem =
         { pkgs, ... }:
         let
-          bin = pkgs.callPackage ./nix/default.nix { };
+          operator = pkgs.callPackage ./nix/default.nix { };
         in
         {
           packages = {
-            default = bin;
+            default = operator;
           };
 
           devShells.default = pkgs.mkShellNoCC {
@@ -41,8 +41,9 @@
           };
 
           treefmt.programs = {
-            nixfmt.enable = true;
+            mdformat.enable = true;
             google-java-format.enable = true;
+            nixfmt.enable = true;
             xmllint.enable = true;
           };
         };

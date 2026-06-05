@@ -1,3 +1,3 @@
-# Generated Project Skeleton
+# Blocky Operator
 
-A simple operator that copies the value in a spec to a ConfigMap. 
+Deploys and manages blocky on a kubernetes cluster.
