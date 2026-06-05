@@ -15,6 +15,4 @@
  */
 package dev.unmango;
 
-public class BlockyOperatorStatus {
-
-}
+public class BlockyOperatorStatus {}

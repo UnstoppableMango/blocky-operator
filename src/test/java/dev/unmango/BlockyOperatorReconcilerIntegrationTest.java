@@ -15,61 +15,63 @@
  */
 package dev.unmango;
 
+import static dev.unmango.ConfigMapDependentResource.KEY;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.javaoperatorsdk.operator.junit.LocallyRunOperatorExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static dev.unmango.ConfigMapDependentResource.KEY;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 class BlockyOperatorReconcilerIntegrationTest {
 
-    public static final String RESOURCE_NAME = "test1";
-    public static final String INITIAL_VALUE = "initial value";
-    public static final String CHANGED_VALUE = "changed value";
+  public static final String RESOURCE_NAME = "test1";
+  public static final String INITIAL_VALUE = "initial value";
+  public static final String CHANGED_VALUE = "changed value";
 
-    @RegisterExtension
-    LocallyRunOperatorExtension extension =
-            LocallyRunOperatorExtension.builder()
-                    .withReconciler(BlockyOperatorReconciler.class)
-                    .build();
+  @RegisterExtension
+  LocallyRunOperatorExtension extension =
+      LocallyRunOperatorExtension.builder().withReconciler(BlockyOperatorReconciler.class).build();
 
-    @Test
-    void testCRUDOperations() {
-        var cr = extension.create(testResource());
+  @Test
+  void testCRUDOperations() {
+    var cr = extension.create(testResource());
 
-        await().untilAsserted(() -> {
-            var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-            assertThat(cm).isNotNull();
-            assertThat(cm.getData()).containsEntry(KEY, INITIAL_VALUE);
-        });
+    await()
+        .untilAsserted(
+            () -> {
+              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+              assertThat(cm).isNotNull();
+              assertThat(cm.getData()).containsEntry(KEY, INITIAL_VALUE);
+            });
 
-        cr.getSpec().setValue(CHANGED_VALUE);
-        cr = extension.replace(cr);
+    cr.getSpec().setValue(CHANGED_VALUE);
+    cr = extension.replace(cr);
 
-        await().untilAsserted(() -> {
-            var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-            assertThat(cm.getData()).containsEntry(KEY, CHANGED_VALUE);
-        });
+    await()
+        .untilAsserted(
+            () -> {
+              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+              assertThat(cm.getData()).containsEntry(KEY, CHANGED_VALUE);
+            });
 
-        extension.delete(cr);
+    extension.delete(cr);
 
-        await().untilAsserted(() -> {
-            var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-            assertThat(cm).isNull();
-        });
-    }
+    await()
+        .untilAsserted(
+            () -> {
+              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+              assertThat(cm).isNull();
+            });
+  }
 
-    BlockyOperatorCustomResource testResource() {
-        var resource = new BlockyOperatorCustomResource();
-        resource.setMetadata(new ObjectMetaBuilder()
-                .withName(RESOURCE_NAME)
-                .build());
-        resource.setSpec(new BlockyOperatorSpec());
-        resource.getSpec().setValue(INITIAL_VALUE);
-        return resource;
-    }
+  BlockyOperatorCustomResource testResource() {
+    var resource = new BlockyOperatorCustomResource();
+    resource.setMetadata(new ObjectMetaBuilder().withName(RESOURCE_NAME).build());
+    resource.setSpec(new BlockyOperatorSpec());
+    resource.getSpec().setValue(INITIAL_VALUE);
+    return resource;
+  }
 }

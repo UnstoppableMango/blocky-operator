@@ -24,7 +24,14 @@
 
       perSystem =
         { pkgs, ... }:
+        let
+          bin = pkgs.callPackage ./nix/default.nix { };
+        in
         {
+          packages = {
+            default = bin;
+          };
+
           devShells.default = pkgs.mkShellNoCC {
             packages = with pkgs; [
               gnumake
@@ -35,6 +42,8 @@
 
           treefmt.programs = {
             nixfmt.enable = true;
+            google-java-format.enable = true;
+            xmllint.enable = true;
           };
         };
     };

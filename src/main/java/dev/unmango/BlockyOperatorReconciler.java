@@ -15,21 +15,18 @@
  */
 package dev.unmango;
 
+import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
-import io.javaoperatorsdk.operator.api.reconciler.Context;
-import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import io.javaoperatorsdk.operator.api.reconciler.Workflow;
-
-import java.util.Map;
-import java.util.Optional;
+import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 
 @Workflow(dependents = {@Dependent(type = ConfigMapDependentResource.class)})
 public class BlockyOperatorReconciler implements Reconciler<BlockyOperatorCustomResource> {
 
-    public UpdateControl<BlockyOperatorCustomResource> reconcile(BlockyOperatorCustomResource primary,
-                                                     Context<BlockyOperatorCustomResource> context) {
+  public UpdateControl<BlockyOperatorCustomResource> reconcile(
+      BlockyOperatorCustomResource primary, Context<BlockyOperatorCustomResource> context) {
 
-        return UpdateControl.noUpdate();
-    }
+    return UpdateControl.noUpdate();
+  }
 }
