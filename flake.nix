@@ -1,5 +1,5 @@
 {
-  description = "A Nix flake";
+  description = "An operator for deploying and managing Blocky on Kubernetes.";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -28,6 +28,7 @@
           devShells.default = pkgs.mkShellNoCC {
             packages = with pkgs; [
               gnumake
+              maven
               nixfmt
             ];
           };
