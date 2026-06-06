@@ -1,9 +1,10 @@
 KIND_CLUSTER_NAME ?= blocky-operator
 KIND_KUBECONFIG   := .kind/kubeconfig
+CRD_DIR           := target/classes/META-INF/fabric8
 
 export KIND_EXPERIMENTAL_PROVIDER = podman
 
-.PHONY: build update check lint format fmt test start-kind stop-kind
+.PHONY: build update check lint format fmt test deploy deploy-crds run start-kind stop-kind
 
 build:
 	nix build .#
@@ -19,6 +20,17 @@ format fmt:
 
 test:
 	mvn test
+
+$(CRD_DIR): pom.xml $(shell find src/main/java -name '*.java')
+	mvn compile -q
+
+deploy-crds: $(KIND_KUBECONFIG) $(CRD_DIR)
+	kubectl apply -f $(CRD_DIR) --kubeconfig=$(KIND_KUBECONFIG)
+
+deploy: deploy-crds
+
+run: deploy-crds
+	KUBECONFIG=$(KIND_KUBECONFIG) mvn exec:java -Dexec.mainClass=dev.unmango.Runner
 
 $(KIND_KUBECONFIG): kind-config.yaml
 	mkdir -p .kind

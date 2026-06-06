@@ -14,6 +14,12 @@ public class DeploymentDependentResource
 
   private static final Map<String, String> LABELS = Map.of("app.kubernetes.io/name", "blocky");
 
+  private static String effectiveConfigMapName(Blocky primary) {
+    var config = primary.getSpec().getConfig();
+    if (config != null && config.getConfigMap() != null) return config.getConfigMap();
+    return ConfigMapDependentResource.configMapName(primary);
+  }
+
   @Override
   protected Deployment desired(Blocky primary, Context<Blocky> context) {
     return new DeploymentBuilder()
@@ -49,7 +55,19 @@ public class DeploymentDependentResource
         .withContainerPort(4000)
         .withProtocol("TCP")
         .endPort()
+        .addNewVolumeMount()
+        .withName(ConfigMapDependentResource.CONFIG_VOLUME_NAME)
+        .withMountPath(ConfigMapDependentResource.CONFIG_MOUNT_PATH)
+        .withSubPath(ConfigMapDependentResource.CONFIG_KEY)
+        .withReadOnly(true)
+        .endVolumeMount()
         .endContainer()
+        .addNewVolume()
+        .withName(ConfigMapDependentResource.CONFIG_VOLUME_NAME)
+        .withNewConfigMap()
+        .withName(effectiveConfigMapName(primary))
+        .endConfigMap()
+        .endVolume()
         .endSpec()
         .endTemplate()
         .endSpec()

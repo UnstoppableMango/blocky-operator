@@ -3,9 +3,12 @@ package dev.unmango;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.javaoperatorsdk.operator.junit.LocallyRunOperatorExtension;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -26,12 +29,57 @@ class BlockyReconcilerIntegrationTest {
     await()
         .untilAsserted(
             () -> {
+              var configMap = extension.get(ConfigMap.class, RESOURCE_NAME + "-config");
+              assertThat(configMap).isNotNull();
+              assertThat(configMap.getData()).containsKey(ConfigMapDependentResource.CONFIG_KEY);
+
               var deployment = extension.get(Deployment.class, RESOURCE_NAME);
               assertThat(deployment).isNotNull();
-              assertThat(deployment.getSpec().getTemplate().getSpec().getContainers())
+              var podSpec = deployment.getSpec().getTemplate().getSpec();
+              assertThat(podSpec.getContainers())
                   .hasSize(1)
                   .first()
-                  .satisfies(c -> assertThat(c.getImage()).isEqualTo(INITIAL_IMAGE));
+                  .satisfies(
+                      c -> {
+                        assertThat(c.getImage()).isEqualTo(INITIAL_IMAGE);
+                        assertThat(c.getVolumeMounts()).hasSize(1);
+                        assertThat(c.getVolumeMounts().get(0).getMountPath())
+                            .isEqualTo(ConfigMapDependentResource.CONFIG_MOUNT_PATH);
+                        assertThat(c.getVolumeMounts().get(0).getReadOnly()).isTrue();
+                      });
+              assertThat(podSpec.getVolumes()).hasSize(1);
+              assertThat(podSpec.getVolumes().get(0).getName())
+                  .isEqualTo(ConfigMapDependentResource.CONFIG_VOLUME_NAME);
+              assertThat(podSpec.getVolumes().get(0).getConfigMap().getName())
+                  .isEqualTo(RESOURCE_NAME + "-config");
+            });
+  }
+
+  @Test
+  void usesExistingConfigMap() {
+    var existingCm =
+        new ConfigMapBuilder()
+            .withMetadata(new ObjectMetaBuilder().withName("my-config").build())
+            .withData(Map.of(ConfigMapDependentResource.CONFIG_KEY, "upstream:\n  default: 8.8.8.8\n"))
+            .build();
+    extension.create(existingCm);
+
+    var resource = testResource();
+    var config = new BlockyConfig();
+    config.setConfigMap("my-config");
+    resource.getSpec().setConfig(config);
+    extension.create(resource);
+
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(extension.get(ConfigMap.class, RESOURCE_NAME + "-config")).isNull();
+
+              var deployment = extension.get(Deployment.class, RESOURCE_NAME);
+              assertThat(deployment).isNotNull();
+              var volumes = deployment.getSpec().getTemplate().getSpec().getVolumes();
+              assertThat(volumes).hasSize(1);
+              assertThat(volumes.get(0).getConfigMap().getName()).isEqualTo("my-config");
             });
   }
 

@@ -6,7 +6,15 @@ import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.api.reconciler.Workflow;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 
-@Workflow(dependents = {@Dependent(type = DeploymentDependentResource.class)})
+@Workflow(
+    dependents = {
+      @Dependent(
+          type = ConfigMapDependentResource.class,
+          activationCondition = OperatorManagedConfigCondition.class),
+      @Dependent(
+          type = DeploymentDependentResource.class,
+          dependsOn = "ConfigMapDependentResource")
+    })
 public class BlockyReconciler implements Reconciler<Blocky> {
 
   public UpdateControl<Blocky> reconcile(Blocky primary, Context<Blocky> context) {
