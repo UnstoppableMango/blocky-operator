@@ -14,6 +14,11 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -23,13 +28,16 @@
       imports = [ inputs.treefmt-nix.flakeModule ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, inputs', ... }:
         let
           operator = pkgs.callPackage ./nix/default.nix { };
+          n2c = inputs'.nix2container.packages.nix2container;
+          container = pkgs.callPackage ./nix/container.nix { inherit n2c operator; };
         in
         {
           packages = {
             default = operator;
+            container = container;
           };
 
           devShells.default = pkgs.mkShellNoCC {

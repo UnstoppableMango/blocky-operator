@@ -9,6 +9,12 @@ export KIND_EXPERIMENTAL_PROVIDER = podman
 build:
 	nix build .#
 
+container:
+	nix build .#container
+
+load-container:
+	nix run .#container.copyToPodman
+
 update:
 	nix flake update
 
