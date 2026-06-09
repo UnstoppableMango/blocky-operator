@@ -88,6 +88,11 @@
       <version>3.6.2</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>generator-annotations</artifactId>
+      <version>${fabric8-client.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

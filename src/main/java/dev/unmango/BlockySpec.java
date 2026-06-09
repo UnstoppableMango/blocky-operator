@@ -3,7 +3,7 @@ package dev.unmango;
 public class BlockySpec {
 
   private String image = "ghcr.io/0xERR0R/blocky:latest";
-  private BlockyConfig config = new BlockyConfig();
+  private BlockyConfig config;
 
   public String getImage() {
     return image;

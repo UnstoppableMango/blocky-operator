@@ -1,13 +1,14 @@
 package dev.unmango;
 
+import io.fabric8.crd.generator.annotation.PreserveUnknownFields;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
-import java.util.Map;
 
 public class BlockyConfig {
 
   private LocalObjectReference configMapRef;
   private String yaml;
-  private Map<String, Object> inline;
+  @PreserveUnknownFields
+  private Object inline;
 
   public LocalObjectReference getConfigMapRef() {
     return configMapRef;
@@ -25,11 +26,11 @@ public class BlockyConfig {
     this.yaml = yaml;
   }
 
-  public Map<String, Object> getInline() {
+  public Object getInline() {
     return inline;
   }
 
-  public void setInline(Map<String, Object> inline) {
+  public void setInline(Object inline) {
     this.inline = inline;
   }
 }
