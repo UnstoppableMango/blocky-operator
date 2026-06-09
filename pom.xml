@@ -82,6 +82,12 @@
       <scope>test</scope>
       <version>${junit.version}</version>
     </dependency>
+    <dependency>
+      <groupId>dnsjava</groupId>
+      <artifactId>dnsjava</artifactId>
+      <version>3.6.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

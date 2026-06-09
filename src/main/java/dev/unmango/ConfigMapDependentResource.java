@@ -24,7 +24,7 @@ public class ConfigMapDependentResource
                 .withName(configMapName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .build())
-        .withData(Map.of(CONFIG_KEY, ""))
+        .withData(Map.of(CONFIG_KEY, "upstreams:\n  groups:\n    default:\n      - 8.8.8.8\n"))
         .build();
   }
 

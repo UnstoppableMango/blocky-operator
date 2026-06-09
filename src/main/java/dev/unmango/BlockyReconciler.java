@@ -10,10 +10,9 @@ import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
     dependents = {
       @Dependent(
           type = ConfigMapDependentResource.class,
+          name = "ConfigMapDependentResource",
           activationCondition = OperatorManagedConfigCondition.class),
-      @Dependent(
-          type = DeploymentDependentResource.class,
-          dependsOn = "ConfigMapDependentResource")
+      @Dependent(type = DeploymentDependentResource.class)
     })
 public class BlockyReconciler implements Reconciler<Blocky> {
 
