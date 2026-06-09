@@ -5,10 +5,12 @@ import static org.awaitility.Awaitility.await;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.javaoperatorsdk.operator.junit.LocallyRunOperatorExtension;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,7 +42,10 @@ class BlockyReconcilerIntegrationTest {
             () -> {
               var configMap = extension.get(ConfigMap.class, RESOURCE_NAME + "-config");
               assertThat(configMap).isNotNull();
-              assertThat(configMap.getData()).containsKey(ConfigMapDependentResource.CONFIG_KEY);
+              assertThat(configMap.getData())
+                  .containsEntry(
+                      ConfigMapDependentResource.CONFIG_KEY,
+                      "upstreams:\n  groups:\n    default:\n      - 8.8.8.8\n");
 
               var deployment = extension.get(Deployment.class, RESOURCE_NAME);
               assertThat(deployment).isNotNull();
@@ -77,7 +82,7 @@ class BlockyReconcilerIntegrationTest {
 
     var resource = testResource();
     var config = new BlockyConfig();
-    config.setConfigMap("my-config");
+    config.setConfigMapRef(new LocalObjectReference("my-config"));
     resource.getSpec().setConfig(config);
     extension.create(resource);
 
@@ -93,6 +98,57 @@ class BlockyReconcilerIntegrationTest {
               assertThat(volumes).hasSize(1);
               assertThat(volumes.get(0).getConfigMap().getName()).isEqualTo("my-config");
 
+              assertThat(deployment.getStatus().getReadyReplicas()).isGreaterThanOrEqualTo(1);
+            });
+  }
+
+  @Test
+  void usesInlineYamlString() {
+    var resource = testResource();
+    var config = new BlockyConfig();
+    config.setYaml("upstreams:\n  groups:\n    default:\n      - 8.8.8.8\n");
+    resource.getSpec().setConfig(config);
+    extension.create(resource);
+
+    await()
+        .atMost(Duration.ofMinutes(3))
+        .untilAsserted(
+            () -> {
+              var configMap = extension.get(ConfigMap.class, RESOURCE_NAME + "-config");
+              assertThat(configMap).isNotNull();
+              assertThat(configMap.getData())
+                  .containsEntry(
+                      ConfigMapDependentResource.CONFIG_KEY,
+                      "upstreams:\n  groups:\n    default:\n      - 8.8.8.8\n");
+
+              var deployment = extension.get(Deployment.class, RESOURCE_NAME);
+              assertThat(deployment).isNotNull();
+              assertThat(deployment.getStatus().getReadyReplicas()).isGreaterThanOrEqualTo(1);
+            });
+  }
+
+  @Test
+  void usesInlineYamlObject() {
+    var resource = testResource();
+    var config = new BlockyConfig();
+    config.setInline(
+        Map.of(
+            "upstreams",
+            Map.of("groups", Map.of("default", List.of("8.8.8.8")))));
+    resource.getSpec().setConfig(config);
+    extension.create(resource);
+
+    await()
+        .atMost(Duration.ofMinutes(3))
+        .untilAsserted(
+            () -> {
+              var configMap = extension.get(ConfigMap.class, RESOURCE_NAME + "-config");
+              assertThat(configMap).isNotNull();
+              assertThat(configMap.getData())
+                  .containsKey(ConfigMapDependentResource.CONFIG_KEY);
+
+              var deployment = extension.get(Deployment.class, RESOURCE_NAME);
+              assertThat(deployment).isNotNull();
               assertThat(deployment.getStatus().getReadyReplicas()).isGreaterThanOrEqualTo(1);
             });
   }
@@ -152,7 +208,7 @@ class BlockyReconcilerIntegrationTest {
 
     var resource = testResource();
     var config = new BlockyConfig();
-    config.setConfigMap("upstream-config");
+    config.setConfigMapRef(new LocalObjectReference("upstream-config"));
     resource.getSpec().setConfig(config);
     extension.create(resource);
 
@@ -197,6 +253,9 @@ class BlockyReconcilerIntegrationTest {
     resource.setMetadata(new ObjectMetaBuilder().withName(RESOURCE_NAME).build());
     var spec = new BlockySpec();
     spec.setImage(INITIAL_IMAGE);
+    var config = new BlockyConfig();
+    config.setYaml("upstreams:\n  groups:\n    default:\n      - 8.8.8.8\n");
+    spec.setConfig(config);
     resource.setSpec(spec);
     return resource;
   }

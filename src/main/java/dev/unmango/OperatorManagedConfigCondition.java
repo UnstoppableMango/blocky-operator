@@ -13,6 +13,8 @@ public class OperatorManagedConfigCondition implements Condition<ConfigMap, Bloc
       Blocky primary,
       Context<Blocky> context) {
     var config = primary.getSpec().getConfig();
-    return config == null || config.getConfigMap() == null;
+    return config != null
+        && config.getConfigMapRef() == null
+        && (config.getYaml() != null || config.getInline() != null);
   }
 }

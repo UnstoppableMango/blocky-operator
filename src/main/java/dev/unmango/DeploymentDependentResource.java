@@ -16,7 +16,7 @@ public class DeploymentDependentResource
 
   private static String effectiveConfigMapName(Blocky primary) {
     var config = primary.getSpec().getConfig();
-    if (config != null && config.getConfigMap() != null) return config.getConfigMap();
+    if (config != null && config.getConfigMapRef() != null) return config.getConfigMapRef().getName();
     return ConfigMapDependentResource.configMapName(primary);
   }
 
